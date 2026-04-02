@@ -186,7 +186,7 @@ export default function SignupPage() {
           className="relative"
         >
           <div
-            className="absolute -inset-[1px] rounded-2xl"
+            className="absolute rounded-2xl"
             style={{
               background:
                 "linear-gradient(135deg, rgba(124,58,237,0.4), rgba(59,130,246,0.2), rgba(124,58,237,0.1))",
@@ -359,7 +359,7 @@ export default function SignupPage() {
                   </div>
                   <Input
                     type="email"
-                    placeholder="you@company.com"
+                    placeholder="Enter Your Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onFocus={() => setFocused("email")}

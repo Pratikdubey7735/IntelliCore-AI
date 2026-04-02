@@ -157,11 +157,13 @@ export default function ReportPage() {
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "none",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e2e8f0",
                           borderRadius: "8px",
-                          color: "#f8fafc",
+                          color: "#1e293b",
                         }}
+                        labelStyle={{ color: "#1e293b" }}
+                        itemStyle={{ color: "#1e293b" }}
                       />
                     </RadarChart>
                   </ResponsiveContainer>
@@ -223,11 +225,13 @@ export default function ReportPage() {
                         <YAxis tick={{ fill: "#94a3b8", fontSize: 9 }} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "#1e293b",
-                            border: "none",
+                            backgroundColor: "#ffffff",
+                            border: "1px solid #e2e8f0",
                             borderRadius: "8px",
-                            color: "#f8fafc",
+                            color: "#1e293b",
                           }}
+                          labelStyle={{ color: "#1e293b" }}
+                          itemStyle={{ color: "#1e293b" }}
                         />
                         <Bar
                           dataKey="avg"
@@ -276,11 +280,13 @@ export default function ReportPage() {
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "none",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e2e8f0",
                           borderRadius: "8px",
-                          color: "#f8fafc",
+                          color: "#1e293b",
                         }}
+                        labelStyle={{ color: "#1e293b" }}
+                        itemStyle={{ color: "#1e293b" }}
                       />
                       <Bar dataKey="runs" radius={[0, 4, 4, 0]}>
                         {report.top_run_scorers.map((_: any, i: number) => (
@@ -319,11 +325,13 @@ export default function ReportPage() {
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "none",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e2e8f0",
                           borderRadius: "8px",
-                          color: "#f8fafc",
+                          color: "#1e293b",
                         }}
+                        labelStyle={{ color: "#1e293b" }}
+                        itemStyle={{ color: "#1e293b" }}
                       />
                       <Bar dataKey="hundreds" radius={[0, 4, 4, 0]}>
                         {report.top_century_scorers.map((_: any, i: number) => (
@@ -406,11 +414,13 @@ export default function ReportPage() {
                       <YAxis tick={{ fill: "#94a3b8", fontSize: 9 }} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "none",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e2e8f0",
                           borderRadius: "8px",
-                          color: "#f8fafc",
+                          color: "#1e293b",
                         }}
+                        labelStyle={{ color: "#1e293b" }}
+                        itemStyle={{ color: "#1e293b" }}
                       />
                       <Bar
                         dataKey="avg_salary"
@@ -452,11 +462,13 @@ export default function ReportPage() {
                       </Pie>
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "none",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e2e8f0",
                           borderRadius: "8px",
-                          color: "#f8fafc",
+                          color: "#1e293b",
                         }}
+                        labelStyle={{ color: "#1e293b" }}
+                        itemStyle={{ color: "#1e293b" }}
                       />
                     </PieChart>
                   </ResponsiveContainer>

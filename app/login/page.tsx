@@ -84,7 +84,7 @@ export default function LoginPage() {
         style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)", filter: "blur(40px)" }} />
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full opacity-20"
         style={{ background: "radial-gradient(circle, #7c3aed 0%, transparent 70%)", filter: "blur(40px)" }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-5"
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  rounded-full opacity-5"
         style={{ background: "radial-gradient(circle, #60a5fa 0%, transparent 60%)", filter: "blur(60px)" }} />
 
       {/* Particles */}
@@ -131,7 +131,7 @@ export default function LoginPage() {
           className="relative"
         >
           {/* Card glow border */}
-          <div className="absolute -inset-[1px] rounded-2xl"
+          <div className="absolute  rounded-2xl"
             style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.4), rgba(124,58,237,0.2), rgba(59,130,246,0.1))" }} />
 
           <div className="relative rounded-2xl p-8 backdrop-blur-xl"
@@ -183,7 +183,7 @@ export default function LoginPage() {
                   </div>
                   <Input
                     type="email"
-                    placeholder="you@company.com"
+                    placeholder="Enter Your Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onFocus={() => setFocused("email")}

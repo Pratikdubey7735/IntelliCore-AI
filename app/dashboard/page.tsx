@@ -134,7 +134,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.4 }}
             className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800"
           >
-            <h3 className="text-slate-800 dark:text-white font-semibold mb-4">Query Intent Distribution</h3>
+            <h3 className="text-slate-400 dark:text-white font-semibold mb-4">Query Intent Distribution</h3>
             {stats?.intent_distribution?.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
@@ -154,9 +154,9 @@ export default function DashboardPage() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip
+                  {/* <Tooltip
                     contentStyle={{ backgroundColor: "#1e293b", border: "none", borderRadius: "8px", color: "#f8fafc" }}
-                  />
+                  /> */}
                 </PieChart>
               </ResponsiveContainer>
             ) : (
