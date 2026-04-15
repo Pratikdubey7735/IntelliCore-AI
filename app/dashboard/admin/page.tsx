@@ -106,7 +106,7 @@ export default function AdminPage() {
                     <th className="text-left py-3 px-4 text-slate-500 dark:text-slate-400 font-medium">Role</th>
                     <th className="text-left py-3 px-4 text-slate-500 dark:text-slate-400 font-medium">Queries</th>
                     <th className="text-left py-3 px-4 text-slate-500 dark:text-slate-400 font-medium">Joined</th>
-                    <th className="text-left py-3 px-4 text-slate-500 dark:text-slate-400 font-medium">Action</th>
+                    {/* <th className="text-left py-3 px-4 text-slate-500 dark:text-slate-400 font-medium">Action</th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -136,7 +136,7 @@ export default function AdminPage() {
                       <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs">
                         {new Date(user.created_at).toLocaleDateString()}
                       </td>
-                      <td className="py-3 px-4">
+                      {/* <td className="py-3 px-4">
                         <button
                           onClick={() => handleRoleToggle(user.id)}
                           disabled={updating === user.id}
@@ -148,7 +148,7 @@ export default function AdminPage() {
                         >
                           {updating === user.id ? "Updating..." : user.role === "admin" ? "Deactivate" : "Activate"}
                         </button>
-                      </td>
+                      </td> */}
                     </motion.tr>
                   ))}
                 </tbody>
@@ -156,7 +156,6 @@ export default function AdminPage() {
             </div>
           )}
         </motion.div>
-
       </div>
     </div>
   )
