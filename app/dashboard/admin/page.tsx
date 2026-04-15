@@ -146,7 +146,7 @@ export default function AdminPage() {
                               : "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"
                           }`}
                         >
-                          {updating === user.id ? "Updating..." : user.role === "admin" ? "Demote" : "Make Admin"}
+                          {updating === user.id ? "Updating..." : user.role === "admin" ? "Deactivate" : "Activate"}
                         </button>
                       </td>
                     </motion.tr>
