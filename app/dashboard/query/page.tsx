@@ -99,26 +99,13 @@ const COLORS = [
 
 // ─── Universal Data Analysis Helpers ─────────────────────────────────────────
 
-/**
- * Safely coerce any value to a number. Returns NaN if not parseable.
- */
 const toNum = (val: any): number => {
   if (val === null || val === undefined || val === "") return NaN;
-  const n = Number(val);
-  return n;
+  return Number(val);
 };
 
-/**
- * Check if a value is numeric (works for both number and numeric string types).
- */
 const isNumeric = (val: any): boolean => !isNaN(toNum(val));
 
-/**
- * Analyse all columns and classify them as:
- *  - "text"   : primarily string / categorical values
- *  - "number" : primarily numeric values
- *  - "mixed"  : blend (treated as text for axis labels)
- */
 const classifyColumns = (
   data: Record<string, any>[],
   columns: string[]
@@ -134,10 +121,6 @@ const classifyColumns = (
   return result;
 };
 
-/**
- * Pick the best label key (categorical axis) and one or more value keys.
- * Prefers columns with more unique values for label, lower cardinality numeric for bars.
- */
 const pickChartKeys = (
   data: Record<string, any>[],
   columns: string[],
@@ -148,7 +131,6 @@ const pickChartKeys = (
   );
   const numCols = columns.filter((c) => colTypes[c] === "number");
 
-  // Sort text cols by unique value count DESC (most unique = best label)
   const labelCol =
     textCols.sort(
       (a, b) =>
@@ -156,16 +138,10 @@ const pickChartKeys = (
         new Set(data.map((r) => r[a])).size
     )[0] || columns[0];
 
-  // All numeric columns except the label
   const valueCols = numCols.filter((c) => c !== labelCol);
-
   return { labelCol, valueCols };
 };
 
-/**
- * Normalize data rows: coerce numeric strings → actual numbers,
- * truncate long label strings for readability.
- */
 const normalizeData = (
   data: Record<string, any>[],
   labelCol: string,
@@ -173,27 +149,30 @@ const normalizeData = (
 ): Record<string, any>[] =>
   data.map((row) => {
     const newRow: Record<string, any> = { ...row };
-    // Truncate label
     if (typeof newRow[labelCol] === "string" && newRow[labelCol].length > 18) {
       newRow[labelCol] = newRow[labelCol].slice(0, 16) + "…";
     }
-    // Coerce numeric columns
     for (const col of valueCols) {
       newRow[col] = toNum(row[col]);
     }
     return newRow;
   });
 
-// ─── Chart Subcomponents ──────────────────────────────────────────────────────
+// ─── Chart Tooltip ────────────────────────────────────────────────────────────
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs shadow-xl">
-      {label && <p className="text-slate-300 mb-1 font-medium">{label}</p>}
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs shadow-xl">
+      {label && (
+        <p className="text-slate-600 dark:text-slate-300 mb-1 font-medium">
+          {label}
+        </p>
+      )}
       {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color || p.fill || "#fff" }}>
-          {p.name}: <span className="font-bold">{p.value?.toLocaleString()}</span>
+        <p key={i} style={{ color: p.color || p.fill || "#3b82f6" }}>
+          {p.name}:{" "}
+          <span className="font-bold">{p.value?.toLocaleString()}</span>
         </p>
       ))}
     </div>
@@ -222,7 +201,6 @@ export default function QueryPage() {
     intent: number;
     table: number;
   } | null>(null);
-  // Which chart type the user has manually selected (null = auto)
   const [chartType, setChartType] = useState<
     "auto" | "bar" | "line" | "pie" | "radar"
   >("auto");
@@ -348,20 +326,13 @@ export default function QueryPage() {
     if (!result || result.data.length === 0) return null;
 
     const { columns, data } = result;
-
-    // 1. Classify every column
     const colTypes = classifyColumns(data, columns);
-
-    // 2. Pick best label + value columns
     const { labelCol, valueCols } = pickChartKeys(data, columns, colTypes);
 
-    // 3. If we truly have no numeric columns at all, show a count-based chart
-    //    e.g. SELECT name FROM … returns only text → count occurrences
     let chartData: Record<string, any>[];
     let activeValueCols: string[];
 
     if (valueCols.length === 0) {
-      // Fallback: count occurrences of each unique label value
       const counts: Record<string, number> = {};
       data.forEach((row) => {
         const key = String(row[labelCol] ?? "Unknown");
@@ -377,7 +348,6 @@ export default function QueryPage() {
       activeValueCols = valueCols;
     }
 
-    // 4. Decide chart type
     const rowCount = chartData.length;
     const multiValueCols = activeValueCols.length > 1;
 
@@ -386,15 +356,8 @@ export default function QueryPage() {
     if (chartType !== "auto") {
       resolvedType = chartType;
     } else {
-      // Auto-selection heuristic:
-      // - ≤6 rows, single value col → Pie
-      // - >1 numeric col → Radar (if ≤12 rows) or grouped Bar
-      // - data looks sequential (has id/rank/year-like col) → Line
-      // - else → Bar
-
       const hasSequentialLabel =
         /rank|year|month|day|round|match|game|over|inning/i.test(labelCol);
-
       if (rowCount <= 6 && activeValueCols.length === 1) {
         resolvedType = "pie";
       } else if (multiValueCols && rowCount <= 12) {
@@ -408,7 +371,8 @@ export default function QueryPage() {
 
     const height = 320;
 
-    // 5. Render
+    // Shared axis tick style — works in both light and dark
+    const axisTick = { fontSize: 11, fill: "currentColor" };
 
     if (resolvedType === "pie") {
       const col = activeValueCols[0];
@@ -447,15 +411,15 @@ export default function QueryPage() {
             data={chartData}
             margin={{ top: 8, right: 16, left: 0, bottom: 40 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:[&>line]:stroke-slate-700" />
             <XAxis
               dataKey={labelCol}
-              tick={{ fontSize: 11, fill: "#94a3b8" }}
+              tick={{ fontSize: 11, fill: "#64748b" }}
               angle={-35}
               textAnchor="end"
               interval={0}
             />
-            <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} />
+            <YAxis tick={{ fontSize: 11, fill: "#64748b" }} />
             <Tooltip content={<CustomTooltip />} />
             {activeValueCols.length > 1 && <Legend />}
             {activeValueCols.map((col, i) => (
@@ -478,12 +442,12 @@ export default function QueryPage() {
       return (
         <ResponsiveContainer width="100%" height={height}>
           <RadarChart data={chartData}>
-            <PolarGrid stroke="#334155" />
+            <PolarGrid stroke="#e2e8f0" />
             <PolarAngleAxis
               dataKey={labelCol}
-              tick={{ fontSize: 11, fill: "#94a3b8" }}
+              tick={{ fontSize: 11, fill: "#64748b" }}
             />
-            <PolarRadiusAxis tick={{ fontSize: 10, fill: "#64748b" }} />
+            <PolarRadiusAxis tick={{ fontSize: 10, fill: "#94a3b8" }} />
             {activeValueCols.map((col, i) => (
               <Radar
                 key={col}
@@ -501,22 +465,22 @@ export default function QueryPage() {
       );
     }
 
-    // Default: Bar (grouped if multiple value cols)
+    // Default: Bar
     return (
       <ResponsiveContainer width="100%" height={height}>
         <BarChart
           data={chartData}
           margin={{ top: 8, right: 16, left: 0, bottom: 48 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis
             dataKey={labelCol}
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 11, fill: "#64748b" }}
             angle={rowCount > 6 ? -40 : 0}
             textAnchor={rowCount > 6 ? "end" : "middle"}
             interval={0}
           />
-          <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} />
+          <YAxis tick={{ fontSize: 11, fill: "#64748b" }} />
           <Tooltip content={<CustomTooltip />} />
           {activeValueCols.length > 1 && <Legend />}
           {activeValueCols.map((col, i) => (
@@ -536,39 +500,37 @@ export default function QueryPage() {
   // ─── JSX ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-200">
       <Navbar title="Query" />
       <div className="max-w-7xl mx-auto px-4 py-8 flex gap-6">
+
         {/* Left — Agent Step Tracker */}
         <div className="w-56 shrink-0">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 sticky top-8">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sticky top-8 shadow-sm">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
               Agent Pipeline
             </p>
             {STEPS.map((step) => {
               const isDone = completedSteps.includes(step.key);
               const isActive = currentStep === step.key;
               return (
-                <div
-                  key={step.key}
-                  className="flex items-center gap-2 py-1.5"
-                >
+                <div key={step.key} className="flex items-center gap-2 py-1.5">
                   <div className="shrink-0">
                     {isDone ? (
                       <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : isActive ? (
                       <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
                     ) : (
-                      <Circle className="w-4 h-4 text-slate-700" />
+                      <Circle className="w-4 h-4 text-slate-300 dark:text-slate-700" />
                     )}
                   </div>
                   <span
                     className={`text-xs ${
                       isDone
-                        ? "text-emerald-400"
+                        ? "text-emerald-600 dark:text-emerald-400"
                         : isActive
-                        ? "text-blue-400 font-medium"
-                        : "text-slate-600"
+                        ? "text-blue-600 dark:text-blue-400 font-medium"
+                        : "text-slate-400 dark:text-slate-600"
                     }`}
                   >
                     {step.label}
@@ -578,46 +540,44 @@ export default function QueryPage() {
             })}
 
             {result && (
-              <div className="mt-4 pt-4 border-t border-slate-800">
-                <p className="text-xs text-slate-500">Completed in</p>
-                <p className="text-sm font-bold text-blue-400">
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <p className="text-xs text-slate-400 dark:text-slate-500">Completed in</p>
+                <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
                   {result.time_taken_ms}ms
                 </p>
 
                 {confidence && (
                   <div className="mt-3">
-                    <p className="text-xs font-semibold text-slate-400 mb-2">
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                       Confidence Scores
                     </p>
                     <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Intent</span>
-                        <span className="text-slate-300">
+                        <span className="text-slate-400 dark:text-slate-500">Intent</span>
+                        <span className="text-slate-700 dark:text-slate-300">
                           {Math.round(confidence.intent * 100)}%
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Table</span>
-                        <span className="text-slate-300">
+                        <span className="text-slate-400 dark:text-slate-500">Table</span>
+                        <span className="text-slate-700 dark:text-slate-300">
                           {Math.round(confidence.table * 100)}%
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Overall</span>
-                        <span className="text-slate-300">
+                        <span className="text-slate-400 dark:text-slate-500">Overall</span>
+                        <span className="text-slate-700 dark:text-slate-300">
                           {Math.round(
                             ((confidence.intent + confidence.table) / 2) * 100
-                          )}
-                          %
+                          )}%
                         </span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-slate-800 mt-1">
+                      <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 mt-1">
                         <div
                           className={`h-full rounded-full transition-all ${
                             (confidence.intent + confidence.table) / 2 >= 0.8
                               ? "bg-emerald-500"
-                              : (confidence.intent + confidence.table) / 2 >=
-                                0.6
+                              : (confidence.intent + confidence.table) / 2 >= 0.6
                               ? "bg-yellow-500"
                               : "bg-red-500"
                           }`}
@@ -638,6 +598,7 @@ export default function QueryPage() {
 
         {/* Right — Main Content */}
         <div className="flex-1 min-w-0 space-y-6">
+
           {/* Search Bar */}
           <div className="relative flex items-center gap-2">
             <div className="relative flex-1">
@@ -647,15 +608,22 @@ export default function QueryPage() {
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleQuery()}
                 placeholder="Ask anything about your data..."
-                className="w-full pl-10 pr-4 py-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                className="w-full pl-10 pr-4 py-3 rounded-lg
+                  bg-white dark:bg-slate-800
+                  border border-slate-200 dark:border-slate-700
+                  text-slate-800 dark:text-white
+                  placeholder:text-slate-400
+                  focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30
+                  shadow-sm
+                  transition-all duration-200"
               />
             </div>
             <button
               onClick={handleVoiceInput}
-              className={`p-3 rounded-lg border transition-all ${
+              className={`p-3 rounded-lg border transition-all duration-200 ${
                 listening
-                  ? "bg-red-500/10 border-red-500 text-red-400"
-                  : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
+                  ? "bg-red-500/10 border-red-400 dark:border-red-500 text-red-500"
+                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-600"
               }`}
             >
               {listening ? (
@@ -667,7 +635,7 @@ export default function QueryPage() {
             <Button
               onClick={handleQuery}
               disabled={loading}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 shadow-sm"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ask"}
             </Button>
@@ -675,12 +643,21 @@ export default function QueryPage() {
 
           {/* Smart Suggestions */}
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs text-slate-500">Suggested questions:</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">
+              Suggested questions:
+            </span>
             {suggestions.map((s, i) => (
               <button
                 key={i}
                 onClick={() => setQuestion(s)}
-                className="px-3 py-1 rounded-full text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-blue-500/10 hover:text-blue-500 transition-all border border-slate-200 dark:border-slate-700"
+                className="px-3 py-1 rounded-full text-xs
+                  bg-white dark:bg-slate-800
+                  text-slate-600 dark:text-slate-400
+                  hover:bg-blue-50 dark:hover:bg-blue-500/10
+                  hover:text-blue-600 dark:hover:text-blue-400
+                  border border-slate-200 dark:border-slate-700
+                  hover:border-blue-200 dark:hover:border-blue-500/30
+                  transition-all duration-200 shadow-sm"
               >
                 {s}
               </button>
@@ -689,7 +666,7 @@ export default function QueryPage() {
 
           {/* Error */}
           {error && (
-            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -703,23 +680,23 @@ export default function QueryPage() {
                 className="space-y-4"
               >
                 {/* Answer Card */}
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold shrink-0 text-white">
                       AI
                     </div>
                     <div>
-                      <p className="text-slate-200 text-sm leading-relaxed">
+                      <p className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed">
                         {result.answer}
                       </p>
                       <div className="flex flex-wrap gap-2 mt-3">
-                        <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-xs">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs">
                           {result.table_used}
                         </span>
-                        <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-xs">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs">
                           {result.intent}
                         </span>
-                        <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-xs">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs">
                           {result.row_count} rows
                         </span>
                       </div>
@@ -729,39 +706,45 @@ export default function QueryPage() {
 
                 {/* Data View */}
                 {result.data.length > 0 && (
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                     {/* Toolbar */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-                      <p className="text-sm font-semibold text-slate-300">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                         Results
                       </p>
                       <div className="flex items-center gap-2">
                         {/* Export */}
                         <button
                           onClick={handleExportCSV}
-                          className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs bg-slate-800 text-slate-400 hover:text-white transition-all"
+                          className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs
+                            bg-slate-100 dark:bg-slate-800
+                            text-slate-500 dark:text-slate-400
+                            hover:text-slate-800 dark:hover:text-white
+                            hover:bg-slate-200 dark:hover:bg-slate-700
+                            transition-all duration-200"
                         >
                           <Download className="w-3 h-3" />
                           Export CSV
                         </button>
-                        {/* Table / Chart toggle */}
+                        {/* Table toggle */}
                         <button
                           onClick={() => setViewMode("table")}
-                          className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs transition-all ${
+                          className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs transition-all duration-200 ${
                             viewMode === "table"
                               ? "bg-blue-600 text-white"
-                              : "bg-slate-800 text-slate-500"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                           }`}
                         >
                           <Table className="w-3 h-3" />
                           Table
                         </button>
+                        {/* Chart toggle */}
                         <button
                           onClick={() => setViewMode("chart")}
-                          className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs transition-all ${
+                          className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs transition-all duration-200 ${
                             viewMode === "chart"
                               ? "bg-blue-600 text-white"
-                              : "bg-slate-800 text-slate-500"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                           }`}
                         >
                           <BarChart2 className="w-3 h-3" />
@@ -770,27 +753,27 @@ export default function QueryPage() {
                       </div>
                     </div>
 
-                    {/* Chart Type Selector (visible only in chart mode) */}
+                    {/* Chart Type Selector */}
                     {viewMode === "chart" && (
-                      <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-800 bg-slate-900/50">
-                        <span className="text-xs text-slate-500">
+                      <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                        <span className="text-xs text-slate-400 dark:text-slate-500">
                           Chart type:
                         </span>
-                        {(
-                          ["auto", "bar", "line", "pie", "radar"] as const
-                        ).map((type) => (
-                          <button
-                            key={type}
-                            onClick={() => setChartType(type)}
-                            className={`px-2.5 py-0.5 rounded-md text-xs capitalize transition-all ${
-                              chartType === type
-                                ? "bg-blue-600 text-white"
-                                : "bg-slate-800 text-slate-400 hover:text-white"
-                            }`}
-                          >
-                            {type}
-                          </button>
-                        ))}
+                        {(["auto", "bar", "line", "pie", "radar"] as const).map(
+                          (type) => (
+                            <button
+                              key={type}
+                              onClick={() => setChartType(type)}
+                              className={`px-2.5 py-0.5 rounded-md text-xs capitalize transition-all duration-200 ${
+                                chartType === type
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                              }`}
+                            >
+                              {type}
+                            </button>
+                          )
+                        )}
                       </div>
                     )}
 
@@ -801,11 +784,11 @@ export default function QueryPage() {
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm table-fixed">
                               <thead>
-                                <tr className="bg-slate-800">
+                                <tr className="bg-slate-100 dark:bg-slate-800">
                                   {result.columns.map((col) => (
                                     <th
                                       key={col}
-                                      className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider truncate"
+                                      className="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate"
                                       style={{ minWidth: "120px" }}
                                     >
                                       {col.replace(/_/g, " ")}
@@ -817,16 +800,16 @@ export default function QueryPage() {
                                 {result.data.map((row, i) => (
                                   <tr
                                     key={i}
-                                    className={`border-t border-slate-800 ${
+                                    className={`border-t border-slate-100 dark:border-slate-800 transition-colors ${
                                       i % 2 === 0
-                                        ? "bg-slate-900"
-                                        : "bg-slate-900/50"
-                                    } hover:bg-slate-800/60 transition-colors`}
+                                        ? "bg-white dark:bg-slate-900"
+                                        : "bg-slate-50 dark:bg-slate-900/50"
+                                    } hover:bg-blue-50 dark:hover:bg-slate-800/60`}
                                   >
                                     {result.columns.map((col) => (
                                       <td
                                         key={col}
-                                        className="px-3 py-2 text-slate-300 truncate"
+                                        className="px-3 py-2 text-slate-600 dark:text-slate-300 truncate"
                                         title={String(row[col])}
                                         style={{ minWidth: "120px" }}
                                       >
@@ -847,10 +830,13 @@ export default function QueryPage() {
                 )}
 
                 {/* SQL Block */}
-                <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                   <button
                     onClick={() => setShowSQL(!showSQL)}
-                    className="w-full flex items-center justify-between p-4 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-sm"
+                    className="w-full flex items-center justify-between p-4
+                      text-slate-500 dark:text-slate-400
+                      hover:bg-slate-50 dark:hover:bg-slate-800
+                      transition-all duration-200 text-sm"
                   >
                     Generated SQL
                     {showSQL ? (
@@ -861,13 +847,18 @@ export default function QueryPage() {
                   </button>
                   {showSQL && (
                     <div className="px-4 pb-4">
-                      <pre className="bg-slate-800 rounded-lg p-4 text-xs text-emerald-400 font-mono overflow-x-auto whitespace-pre-wrap break-words">
+                      <pre className="bg-slate-900 dark:bg-slate-800 rounded-lg p-4 text-xs text-emerald-400 font-mono overflow-x-auto whitespace-pre-wrap break-words border border-slate-200 dark:border-slate-700">
                         {result.sql}
                       </pre>
                       <button
                         onClick={handleExplainSQL}
                         disabled={explaining}
-                        className="mt-3 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 text-xs transition-all border border-purple-500/30"
+                        className="mt-3 flex items-center gap-2 px-3 py-1.5 rounded-lg
+                          bg-purple-50 dark:bg-purple-600/10
+                          hover:bg-purple-100 dark:hover:bg-purple-600/20
+                          text-purple-600 dark:text-purple-400
+                          text-xs transition-all duration-200
+                          border border-purple-200 dark:border-purple-500/30"
                       >
                         {explaining ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -877,11 +868,11 @@ export default function QueryPage() {
                         {explaining ? "Explaining..." : "Explain this Query"}
                       </button>
                       {sqlExplanation && (
-                        <div className="mt-3 p-3 rounded-lg bg-slate-800 border border-slate-700">
-                          <p className="text-xs font-semibold text-slate-400 mb-1">
+                        <div className="mt-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
                             Query Explanation
                           </p>
-                          <p className="text-xs text-slate-300 leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                             {sqlExplanation}
                           </p>
                         </div>
@@ -891,13 +882,13 @@ export default function QueryPage() {
                 </div>
 
                 {/* Save Query */}
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                    <Bookmark className="w-4 h-4 text-blue-400" />
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                    <Bookmark className="w-4 h-4 text-blue-500" />
                     Save this Query
                   </p>
                   {saveSuccess ? (
-                    <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm">
                       <CheckCircle className="w-4 h-4" />
                       Query saved successfully!
                     </div>
@@ -907,7 +898,14 @@ export default function QueryPage() {
                         value={saveLabel}
                         onChange={(e) => setSaveLabel(e.target.value)}
                         placeholder="Give this query a label..."
-                        className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:border-blue-500"
+                        className="flex-1 min-w-0 px-3 py-2 rounded-lg
+                          bg-white dark:bg-slate-800
+                          border border-slate-200 dark:border-slate-700
+                          text-slate-800 dark:text-white
+                          placeholder:text-slate-400
+                          text-sm focus:outline-none
+                          focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30
+                          transition-all duration-200"
                       />
                       <Button
                         onClick={handleSave}
