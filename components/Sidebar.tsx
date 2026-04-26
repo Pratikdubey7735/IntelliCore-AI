@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { usePathname, useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { useState, useEffect } from "react"
-import { logout } from "@/lib/auth"
+import { usePathname, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { logout } from "@/lib/auth";
 import {
   LayoutDashboard,
   Search,
@@ -16,8 +16,9 @@ import {
   MessageCircle,
   FileText,
   ChevronLeft,
-  ChevronRight
-} from "lucide-react"
+  ChevronRight,
+} from "lucide-react";
+import { BarChart2, Activity } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -28,28 +29,34 @@ const navItems = [
   { label: "Report", href: "/dashboard/report", icon: FileText },
   { label: "History", href: "/dashboard/history", icon: History },
   { label: "Saved", href: "/dashboard/saved", icon: Bookmark },
-]
+];
+
+const adminItems = [
+  { label: "Admin Panel", href: "/dashboard/admin", icon: Users },
+  { label: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart2 },
+  { label: "Query Monitor", href: "/dashboard/admin/monitor", icon: Activity },
+];
 
 export default function Sidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [user, setUser] = useState<{ name: string; role: string } | null>(null)
-  const [collapsed, setCollapsed] = useState(false)
+  const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("intellicore_user")
-    if (stored) setUser(JSON.parse(stored))
-  }, [])
+    const stored = localStorage.getItem("intellicore_user");
+    if (stored) setUser(JSON.parse(stored));
+  }, []);
 
   // Auto collapse when route changes
   useEffect(() => {
-    setCollapsed(true)
-  }, [pathname])
+    setCollapsed(true);
+  }, [pathname]);
 
   const handleNav = (href: string) => {
-    router.push(href)
-    setCollapsed(true)
-  }
+    router.push(href);
+    setCollapsed(true);
+  };
 
   return (
     <motion.div
@@ -62,10 +69,11 @@ export default function Sidebar() {
         onClick={() => setCollapsed(!collapsed)}
         className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center z-10 shadow-md"
       >
-        {collapsed
-          ? <ChevronRight className="w-3 h-3" />
-          : <ChevronLeft className="w-3 h-3" />
-        }
+        {collapsed ? (
+          <ChevronRight className="w-3 h-3" />
+        ) : (
+          <ChevronLeft className="w-3 h-3" />
+        )}
       </button>
 
       {/* Logo */}
@@ -86,10 +94,11 @@ export default function Sidebar() {
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 p-2 space-y-1">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+        {/* Regular nav items */}
         {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
           return (
             <button
               key={item.href}
@@ -113,36 +122,61 @@ export default function Sidebar() {
                 </motion.span>
               )}
             </button>
-          )
+          );
         })}
 
+        {/* Admin only section */}
         {user?.role === "admin" && (
-          <button
-            onClick={() => handleNav("/dashboard/admin")}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-              pathname === "/dashboard/admin"
-                ? "bg-blue-600 text-white"
-                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-            }`}
-            title={collapsed ? "Admin" : ""}
-          >
-            <Users className="w-4 h-4 shrink-0" />
+          <>
+            {/* Divider */}
             {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                Admin
-              </motion.span>
+              <div className="px-3 pt-3 pb-1">
+                <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">
+                  Admin
+                </p>
+              </div>
             )}
-          </button>
+            {collapsed && (
+              <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+            )}
+
+            {adminItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => handleNav(item.href)}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                  title={collapsed ? item.label : ""}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {!collapsed && (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                      className="whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </button>
+              );
+            })}
+          </>
         )}
       </nav>
 
       {/* User + Logout */}
       <div className="p-2 border-t border-slate-200 dark:border-slate-800">
-        <div className={`flex items-center gap-3 mb-2 px-2 overflow-hidden ${collapsed ? "justify-center" : ""}`}>
+        <div
+          className={`flex items-center gap-3 mb-2 px-2 overflow-hidden ${collapsed ? "justify-center" : ""}`}
+        >
           <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
             {user?.name?.charAt(0).toUpperCase()}
           </div>
@@ -152,7 +186,9 @@ export default function Sidebar() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              <p className="text-slate-800 dark:text-white text-sm font-medium whitespace-nowrap">{user?.name}</p>
+              <p className="text-slate-800 dark:text-white text-sm font-medium whitespace-nowrap">
+                {user?.name}
+              </p>
               <p className="text-slate-400 text-xs capitalize">{user?.role}</p>
             </motion.div>
           )}
@@ -175,5 +211,5 @@ export default function Sidebar() {
         </button>
       </div>
     </motion.div>
-  )
+  );
 }

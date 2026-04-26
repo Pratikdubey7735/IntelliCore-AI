@@ -95,3 +95,45 @@ export const getReportApi = async () => {
   const res = await api.get("/api/report")
   return res.data
 }
+
+// Announcements
+export const setAnnouncementApi = async (message: string, type: string) => {
+  const res = await api.post("/api/admin/announcement", { message, type })
+  return res.data
+}
+export const getAnnouncementApi = async () => {
+  const res = await api.get("/api/announcement")
+  return res.data
+}
+export const clearAnnouncementApi = async () => {
+  const res = await api.delete("/api/admin/announcement")
+  return res.data
+}
+
+// Analytics
+export const getSystemAnalyticsApi = async () => {
+  const res = await api.get("/api/admin/analytics")
+  return res.data
+}
+
+// Query Monitor
+export const getQueryMonitorApi = async () => {
+  const res = await api.get("/api/admin/query-monitor")
+  return res.data
+}
+
+// Failed Queries
+export const getFailedQueriesApi = async () => {
+  const res = await api.get("/api/admin/failed-queries")
+  return res.data
+}
+
+// Ban user
+export const banUserApi = async (userId: number, isActive: boolean) => {
+  const res = await api.put(`/api/admin/users/${userId}/ban`, { is_active: isActive })
+  return res.data
+}
+export const markAnnouncementReadApi = async (annId: number) => {
+  const res = await api.post(`/api/announcement/${annId}/read`)
+  return res.data
+}

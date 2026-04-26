@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import ThemeToggle from "@/components/ThemeToggle"
+import NotificationBell from "@/components/NotificationBell"
 
 interface NavbarProps {
   title: string
@@ -20,6 +21,7 @@ export default function Navbar({ title }: NavbarProps) {
       <h2 className="text-slate-800 dark:text-white font-semibold text-lg">{title}</h2>
       <div className="flex items-center gap-3">
         <ThemeToggle />
+         <NotificationBell />
         <span className="text-slate-500 dark:text-slate-400 text-sm">Welcome, {user?.name}</span>
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
           {user?.name?.charAt(0).toUpperCase()}
