@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { loginApi } from "@/lib/api"
 import { saveToken, saveUser } from "@/lib/auth"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-// Animated background particles
 const Particle = ({ style }: { style: React.CSSProperties }) => (
   <motion.div
     className="absolute rounded-full"
@@ -51,10 +49,19 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     setError("")
+
     if (!email || !password) {
       setError("Please fill in all fields")
       return
     }
+
+    // Custom email validation — no browser popup
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email. Example: name@example.com")
+      return
+    }
+
     setLoading(true)
     try {
       const data = await loginApi(email, password)
@@ -84,7 +91,7 @@ export default function LoginPage() {
         style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)", filter: "blur(40px)" }} />
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full opacity-20"
         style={{ background: "radial-gradient(circle, #7c3aed 0%, transparent 70%)", filter: "blur(40px)" }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  rounded-full opacity-5"
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-5"
         style={{ background: "radial-gradient(circle, #60a5fa 0%, transparent 60%)", filter: "blur(60px)" }} />
 
       {/* Particles */}
@@ -106,19 +113,24 @@ export default function LoginPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <div className="inline-flex items-center gap-2 mb-3">
-            {/* Icon */}
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ background: "linear-gradient(135deg, #3b82f6, #7c3aed)" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                  stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white"
               style={{ fontFamily: "'Sora', 'DM Sans', sans-serif", letterSpacing: "-0.04em" }}>
-              Intelli<span style={{ background: "linear-gradient(90deg, #60a5fa, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>core-AI</span>
+              Intelli<span style={{
+                background: "linear-gradient(90deg, #60a5fa, #a78bfa)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent"
+              }}>core-AI</span>
             </h1>
           </div>
-          <p className="text-sm" style={{ color: "rgba(148,163,184,0.7)", letterSpacing: "0.08em", fontFamily: "'DM Sans', sans-serif" }}>
+          <p className="text-sm"
+            style={{ color: "rgba(148,163,184,0.7)", letterSpacing: "0.08em", fontFamily: "'DM Sans', sans-serif" }}>
             AI POWERED DATA INTELLIGENCE
           </p>
         </motion.div>
@@ -130,8 +142,7 @@ export default function LoginPage() {
           transition={{ duration: 0.6, delay: 0.35 }}
           className="relative"
         >
-          {/* Card glow border */}
-          <div className="absolute  rounded-2xl"
+          <div className="absolute rounded-2xl"
             style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.4), rgba(124,58,237,0.2), rgba(59,130,246,0.1))" }} />
 
           <div className="relative rounded-2xl p-8 backdrop-blur-xl"
@@ -148,6 +159,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-5">
+
               {/* Error */}
               <AnimatePresence>
                 {error && (
@@ -156,7 +168,11 @@ export default function LoginPage() {
                     animate={{ opacity: 1, height: "auto", y: 0 }}
                     exit={{ opacity: 0, height: 0 }}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
-                    style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#fca5a5" }}
+                    style={{
+                      background: "rgba(239,68,68,0.08)",
+                      border: "1px solid rgba(239,68,68,0.2)",
+                      color: "#fca5a5"
+                    }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
@@ -177,12 +193,13 @@ export default function LoginPage() {
                   <div className="absolute left-4 top-1/2 -translate-y-1/2"
                     style={{ color: focused === "email" ? "#60a5fa" : "rgba(148,163,184,0.3)", transition: "color 0.2s" }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                        stroke="currentColor" strokeWidth="2"/>
                       <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2"/>
                     </svg>
                   </div>
                   <Input
-                    type="email"
+                    type="text"
                     placeholder="Enter Your Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -195,8 +212,9 @@ export default function LoginPage() {
                       borderColor: focused === "email" ? "rgba(96,165,250,0.5)" : "rgba(255,255,255,0.08)",
                       color: "white",
                       borderRadius: "12px",
-                      outline: focused === "email" ? "none" : undefined,
-                      boxShadow: focused === "email" ? "0 0 0 3px rgba(59,130,246,0.1), inset 0 1px 0 rgba(255,255,255,0.05)" : "inset 0 1px 0 rgba(255,255,255,0.05)",
+                      boxShadow: focused === "email"
+                        ? "0 0 0 3px rgba(59,130,246,0.1), inset 0 1px 0 rgba(255,255,255,0.05)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.05)",
                     }}
                   />
                 </div>
@@ -238,7 +256,9 @@ export default function LoginPage() {
                       borderColor: focused === "password" ? "rgba(96,165,250,0.5)" : "rgba(255,255,255,0.08)",
                       color: "white",
                       borderRadius: "12px",
-                      boxShadow: focused === "password" ? "0 0 0 3px rgba(59,130,246,0.1), inset 0 1px 0 rgba(255,255,255,0.05)" : "inset 0 1px 0 rgba(255,255,255,0.05)",
+                      boxShadow: focused === "password"
+                        ? "0 0 0 3px rgba(59,130,246,0.1), inset 0 1px 0 rgba(255,255,255,0.05)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.05)",
                     }}
                   />
                 </div>
@@ -258,7 +278,6 @@ export default function LoginPage() {
                     letterSpacing: "0.01em"
                   }}
                 >
-                  {/* Shimmer */}
                   {!loading && (
                     <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300"
                       style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)" }} />
