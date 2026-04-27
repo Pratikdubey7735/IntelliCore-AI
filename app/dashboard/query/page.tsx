@@ -46,14 +46,12 @@ import { Sparkles } from "lucide-react";
 const SUGGESTIONS: Record<string, string[]> = {
   default: [
     "Who scored the highest marks in Python?",
-    "Which department has the highest average salary?",
     "Show top 5 cricket players by runs",
     "How many students scored above 80 in Data Structures?",
     "Which employee has the highest performance rating?",
   ],
   student: [
     "Who scored the highest marks in Python?",
-    "What is the average marks in Data Structures?",
     "Show top 5 students in C programming",
     "How many students scored more than 80 in COA?",
     "Who performed best in Software Engineering?",
@@ -69,7 +67,6 @@ const SUGGESTIONS: Record<string, string[]> = {
     "Which department has the highest average salary?",
     "Who is the highest paid employee?",
     "How many employees are in R&D department?",
-    "What is the average experience of employees?",
     "Which employee has the highest performance rating?",
   ],
 };
