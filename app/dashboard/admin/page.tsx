@@ -296,21 +296,7 @@ export default function AdminPage() {
                       <td className="py-3 px-4">
                         <div className="flex gap-2">
                           {/* Role toggle */}
-                          <button
-                            onClick={() => handleRoleToggle(user.id, user.role)}
-                            disabled={updating === user.id}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50 ${
-                              user.role === "admin"
-                                ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                                : "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"
-                            }`}
-                          >
-                            {updating === user.id
-                              ? "..."
-                              : user.role === "admin" ? "Demote" : "Make Admin"
-                            }
-                          </button>
-
+                          
                           {/* Ban toggle */}
                           <button
                             onClick={() => handleBan(user.id, user.is_active !== false)}
